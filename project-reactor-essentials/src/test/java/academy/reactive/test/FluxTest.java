@@ -209,6 +209,22 @@ public class FluxTest {
             .verify();
     }
 
+    @Test
+    public void connectableFluxAutoConnect() throws Exception {
+        Flux<Integer> fluxAutoConnect = Flux.range(1, 5)
+            .log()
+            .delayElements(Duration.ofMillis(100))
+            .publish()
+            .autoConnect(2);
+
+        StepVerifier
+            .create(fluxAutoConnect)
+            .then(fluxAutoConnect::subscribe)
+            .expectNext(1, 2, 3, 4, 5)
+            .expectComplete()
+            .verify();
+    }
+
     private Flux<Long> createInterval() {
         return Flux.interval(Duration.ofDays(1))
             .log();
