@@ -10,6 +10,7 @@ import reactor.test.StepVerifier;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -145,16 +146,16 @@ public class OperatorsTest {
 
 
     @Test
-    public void subscribeOnIO() throws Exception{
+    public void subscribeOnIO() throws Exception {
         Mono<List<String>> list = Mono.fromCallable(() -> Files.readAllLines(Path.of("text-file")))
             .log()
             .subscribeOn(Schedulers.boundedElastic());
         // executing thread in background (boundedElastic)
         // boundedElastic is recommended in the documentation
 
-//        list.subscribe(s -> log.info("{}", s));
+        //        list.subscribe(s -> log.info("{}", s));
 
-//        Thread.sleep(2000);
+        //        Thread.sleep(2000);
 
         StepVerifier.create(list)
             .expectSubscription()
@@ -181,16 +182,16 @@ public class OperatorsTest {
 
     @Test
     public void deferOperation() throws Exception {
-//        Mono<Long> just = Mono.just(System.currentTimeMillis());
+        //        Mono<Long> just = Mono.just(System.currentTimeMillis());
         Mono<Long> defer = Mono.defer(() -> Mono.just(System.currentTimeMillis()));
 
-//        just.subscribe(i -> log.info("time {}", i));
-//        Thread.sleep(100);
-//        just.subscribe(i -> log.info("time {}", i));
-//        Thread.sleep(100);
-//        just.subscribe(i -> log.info("time {}", i));
-//        Thread.sleep(100);
-//        just.subscribe(i -> log.info("time {}", i));
+        //        just.subscribe(i -> log.info("time {}", i));
+        //        Thread.sleep(100);
+        //        just.subscribe(i -> log.info("time {}", i));
+        //        Thread.sleep(100);
+        //        just.subscribe(i -> log.info("time {}", i));
+        //        Thread.sleep(100);
+        //        just.subscribe(i -> log.info("time {}", i));
 
         defer.subscribe(i -> log.info("time {}", i));
         Thread.sleep(100);
@@ -203,8 +204,6 @@ public class OperatorsTest {
         AtomicLong atomicLong = new AtomicLong();
         defer.subscribe(atomicLong::set);
         Assertions.assertTrue(atomicLong.get() > 0);
-
-
     }
 
     @Test
@@ -216,7 +215,7 @@ public class OperatorsTest {
 
         StepVerifier.create(concatFlux)
             .expectSubscription()
-            .expectNext("a","b","c","d")
+            .expectNext("a", "b", "c", "d")
             .expectComplete()
             .verify();
     }
@@ -230,7 +229,7 @@ public class OperatorsTest {
 
         StepVerifier.create(concatFlux)
             .expectSubscription()
-            .expectNext("a","b","c","d")
+            .expectNext("a", "b", "c", "d")
             .expectComplete()
             .verify();
     }
@@ -246,7 +245,43 @@ public class OperatorsTest {
 
         StepVerifier.create(combineLatest)
             .expectSubscription()
-            .expectNext("BC","BD")
+            .expectNext("BC", "BD")
+            .expectComplete()
+            .verify();
+    }
+
+    @Test
+    public void mergeOperator() throws Exception {
+        Flux<String> flux1 = Flux.just("a", "b").delayElements(Duration.ofMillis(200));
+        Flux<String> flux2 = Flux.just("c", "d");
+
+        Flux<String> mergeFlux = Flux.merge(flux1, flux2)
+            .delayElements(Duration.ofMillis(200))
+            .log();
+
+//        mergeFlux.subscribe(log::info);
+
+        Thread.sleep(1000);
+
+        StepVerifier.create(mergeFlux)
+            .expectSubscription()
+            .expectNext("c", "d", "a", "b")
+            .expectComplete()
+            .verify();
+    }
+
+    @Test
+    public void mergeWithOperator() throws Exception {
+        Flux<String> flux1 = Flux.just("a", "b").delayElements(Duration.ofMillis(200));
+        Flux<String> flux2 = Flux.just("c", "d");
+
+        Flux<String> mergeFlux = flux1.mergeWith(flux2)
+            .delayElements(Duration.ofMillis(200))
+            .log();
+
+        StepVerifier.create(mergeFlux)
+            .expectSubscription()
+            .expectNext("c", "d", "a", "b")
             .expectComplete()
             .verify();
     }
