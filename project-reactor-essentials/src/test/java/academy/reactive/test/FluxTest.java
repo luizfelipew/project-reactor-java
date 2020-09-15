@@ -1,9 +1,11 @@
 package academy.reactive.test;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.blockhound.BlockHound;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
@@ -14,6 +16,11 @@ import java.util.List;
 
 @Slf4j
 public class FluxTest {
+
+    @BeforeAll
+    public static void setUp() {
+        BlockHound.install();
+    }
 
     @Test
     public void fluxSubscriber() {
